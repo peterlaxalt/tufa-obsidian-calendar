@@ -1,0 +1,442 @@
+/* Umami Calendar — continuous month scroll, or a year of dots.
+   Fills its pane; square panes get day circles, tall panes get week bands. */
+
+.uc-host.view-content {
+  padding: 0 !important;
+  overflow: hidden;
+  container-type: size;
+  container-name: uc;
+}
+
+.uc {
+  --uc-accent: var(--interactive-accent, #ffadf6);
+  --uc-ink: var(--text-normal);
+  --uc-head-ink: var(--umami-ink, var(--text-normal));
+  --uc-soft: color-mix(in srgb, var(--text-normal) 78%, transparent);
+  --uc-weekend: color-mix(in srgb, var(--text-normal) 58%, transparent);
+  --uc-faint: color-mix(in srgb, var(--text-normal) 42%, transparent);
+  --uc-rule: color-mix(in srgb, var(--text-normal) 11%, transparent);
+  --uc-pad: clamp(12px, 6cqi, 24px);
+  --uc-inset: 6px;
+
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: var(--uc-pad) var(--uc-pad) 0;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "liga", "calt";
+}
+
+/* ---------- header: title | mode toggle | nav ---------- */
+
+.uc-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 var(--uc-inset);
+}
+
+.uc-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45em;
+  min-width: 0;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.uc-month {
+  font-family: "SL-Tastebud-Serif", var(--font-text);
+  font-size: clamp(17px, 6cqi, 22px);
+  color: var(--uc-head-ink);
+  letter-spacing: -0.005em;
+}
+
+.uc-year {
+  font-size: 12px;
+  color: var(--uc-faint);
+  letter-spacing: 0.04em;
+}
+
+/* doubled class beats Obsidian's global button styling */
+.uc .uc-btn {
+  all: unset;
+  box-sizing: border-box;
+  height: 26px;
+  border-radius: 999px;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  color: var(--uc-faint);
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+
+.uc .uc-btn:hover {
+  color: var(--uc-ink);
+  background: var(--uc-rule) !important;
+}
+
+.uc-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.uc:not(.is-dots) .uc-play { display: none; }
+
+.uc .uc-play svg { fill: currentColor; width: 12px; height: 12px; }
+.uc.is-playing .uc-play { color: var(--uc-accent); }
+
+.uc .uc-arrow,
+.uc .uc-play,
+.uc .uc-mode {
+  display: grid;
+  place-items: center;
+  width: 26px;
+}
+
+.uc .uc-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.uc .uc-arrow svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.uc .uc-mode svg { fill: currentColor; }
+
+.uc.is-dots .uc-mode { color: var(--uc-ink); }
+
+/* ---------- floating nav: ‹ Today › above the footer ---------- */
+
+.uc-nav {
+  position: absolute;
+  left: 50%;
+  bottom: 58px;
+  display: flex;
+  align-items: center;
+  padding: 1px 2px;
+  border-radius: 999px;
+  border: 1px solid var(--uc-rule);
+  background: color-mix(in srgb, var(--background-primary) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 3;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.uc.is-nav-shown:not(.is-dots) .uc-nav,
+.uc:not(.is-dots) .uc-nav:hover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.uc .uc-btn.uc-arrow { width: 20px; height: 20px; }
+.uc .uc-arrow svg { width: 11px; height: 11px; }
+
+.uc .uc-today {
+  height: 20px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  line-height: 20px;
+}
+
+.uc .uc-today.is-away,
+.uc .uc-today.is-away:hover { color: var(--uc-accent); }
+
+/* ---------- weekday row ---------- */
+
+.uc-dow-row {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: clamp(12px, 4cqi, 20px) var(--uc-inset) 8px;
+  border-bottom: 1px solid var(--uc-rule);
+}
+
+.uc-dow {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--uc-faint);
+}
+
+.uc-dow.is-weekend { color: color-mix(in srgb, var(--text-normal) 32%, transparent); }
+.uc-dow.is-release { color: var(--uc-soft); }
+
+/* ---------- month scroller ---------- */
+
+.uc-scroll {
+  flex: 1;
+  min-height: 0;
+  position: relative;         /* offsetTop of months is measured against this */
+  overflow-y: auto;
+  overflow-anchor: none;      /* prepends are compensated in JS */
+  scrollbar-width: none;
+  container-type: size;
+  container-name: ucs;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 18px, #000 calc(100% - 28px), transparent 100%);
+}
+
+.uc-scroll::-webkit-scrollbar { display: none; }
+
+.uc-m {
+  height: 86cqh;              /* every month is the same height -> exact scroll maths */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  padding: 14px var(--uc-inset) 10px;
+}
+
+.uc-m-label {
+  flex: none;
+  display: flex;
+  gap: 0.5em;
+  align-items: baseline;
+  padding: 0 0 8px 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--uc-head-ink);
+}
+
+.uc-m-year { opacity: 0.6; display: none; }
+.uc-m-year.is-jan { display: inline; }
+.uc-m.is-current .uc-m-label { color: var(--uc-accent); }
+
+.uc-m-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(var(--uc-weeks, 5), 1fr);
+}
+
+/* ---------- days (square layout) ---------- */
+
+.uc-day {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  cursor: pointer;
+}
+
+.uc-num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: clamp(22px, 9cqi, 32px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  font-size: clamp(11px, 3.6cqi, 14px);
+  line-height: 1;
+  color: var(--uc-soft);
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.uc-day.is-weekend .uc-num { color: var(--uc-weekend); }
+.uc-day.is-release .uc-num { color: var(--uc-ink); }
+.uc-day.is-out .uc-num { color: color-mix(in srgb, var(--text-normal) 22%, transparent); }
+
+/* release days (Thursday): a small accent dot beneath */
+.uc-day.is-release .uc-num::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 3px;
+  height: 3px;
+  margin-left: -1.5px;
+  border-radius: 999px;
+  background: var(--uc-accent);
+  opacity: 0.85;
+}
+
+.uc-day.is-out .uc-num::after { opacity: 0.3; }
+.uc-day:hover .uc-num::after { opacity: 1; }
+
+.uc-day.is-today .uc-num {
+  background: var(--uc-accent);
+  color: var(--background-primary);
+  font-weight: 600;
+}
+
+
+/* hover: inverted — ink fill, background-coloured number */
+.uc-day:hover .uc-num,
+.uc-day.is-out:hover .uc-num {
+  background: var(--uc-ink);
+  color: var(--background-primary);
+}
+
+
+/* ---------- tall & skinny: weeks become bands, numbers sit top-left ---------- */
+
+@container uc (aspect-ratio < 0.8) {
+  .uc-dow { text-align: left; padding-left: 6px; }
+
+  .uc-day {
+    place-items: start;
+    padding-top: 6px;
+    border-top: 1px solid var(--uc-rule);
+  }
+
+  .uc-day.is-out { border-top-color: color-mix(in srgb, var(--text-normal) 5%, transparent); }
+
+  .uc-num {
+    width: auto;
+    aspect-ratio: auto;
+    padding: 3px 6px;
+    font-size: clamp(11px, 3.4cqi, 13px);
+  }
+
+  .uc-day.is-release .uc-num::after { bottom: -11px; }
+
+  .uc-day.is-today { border-top-color: var(--uc-accent); }
+
+  .uc-day.is-today .uc-num {
+    background: none;
+    color: var(--uc-accent);
+  }
+
+
+  .uc-day.is-today:hover .uc-num {
+    background: var(--uc-accent);
+    color: var(--background-primary);
+  }
+
+}
+
+/* ---------- dots mode: one dot per day of the year ---------- */
+
+.uc-dots { display: none; }
+
+.uc.is-dots .uc-dow-row,
+.uc.is-dots .uc-scroll { display: none; }
+
+.uc.is-dots .uc-nav { display: none; }
+
+.uc.is-dots .uc-dots {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  /* leave room for the floating footer */
+  margin: clamp(10px, 4cqi, 20px) 0 52px;
+}
+
+.uc-dots-grid {
+  --cell: 12px;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 19), var(--cell));
+  grid-auto-rows: var(--cell);
+}
+
+.uc-dot {
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.uc-dot { --dot-base: color-mix(in srgb, var(--text-normal) 20%, transparent); }
+.uc-dot.is-past { --dot-base: var(--uc-ink); }
+.uc-dot.is-today { --dot-base: var(--uc-accent); }
+
+/* --w (0..1) is written by the ripple animation: swell + tint toward the accent */
+.uc-dot::before {
+  content: "";
+  width: clamp(2px, calc(var(--cell) * 0.16), 3px);
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--uc-accent) calc(var(--w, 0) * 100%), var(--dot-base));
+  transform: scale(calc(1 + var(--w, 0) * 2.4));
+  transition:
+    transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background-color 160ms ease;
+}
+
+/* frames drive the motion while playing; a long ease settles everything on pause */
+.uc.is-playing .uc-dot::before { transition: none; }
+.uc.is-settling .uc-dot::before {
+  transition:
+    transform 1200ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 1200ms ease;
+}
+
+.uc-dot:hover::before {
+  transform: scale(3);
+  background: var(--uc-ink);
+}
+
+.uc-dot.is-today:hover::before { background: var(--uc-accent); }
+
+/* ---------- floating footer ---------- */
+
+.uc-foot {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--uc-rule);
+  background: color-mix(in srgb, var(--background-primary) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 10.5px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  max-width: calc(100% - 16px);
+  box-sizing: border-box;
+  color: var(--uc-faint);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.uc-foot-rel {
+  color: var(--uc-ink);
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-width 220ms ease, opacity 160ms ease;
+}
+
+.uc-foot.is-copied .uc-foot-rel { color: var(--uc-accent); }
+
+.uc-foot-sep {
+  width: 2px;
+  height: 2px;
+  margin: 0 7px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.8;
+}
+
+.uc-foot-sep-rel { display: none; }
+
+.uc-foot.has-rel .uc-foot-rel { max-width: 12em; opacity: 1; }
+.uc-foot.has-rel .uc-foot-sep-rel { display: block; }
+
+/* narrow panes: tighten the footer so it never overflows */
+@container uc (width < 280px) {
+  .uc-foot { padding: 4px 9px; font-size: 9.5px; letter-spacing: 0.01em; }
+  .uc-foot-sep { margin: 0 5px; }
+}
