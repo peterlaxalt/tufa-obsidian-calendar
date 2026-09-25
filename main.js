@@ -1,6 +1,6 @@
 const { Plugin, ItemView } = require("obsidian");
 
-const VIEW = "umami-calendar";
+const VIEW = "tufa-calendar";
 const DAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const BATCH = 6;          // months added per lazy load
 const EDGE = 2;           // load more when within this many months of an end
@@ -8,7 +8,7 @@ const RELEASE_DAY = 4;    // Thursday — release days get a dot
 const IDLE_MS = 20000;
 const NAV_MS = 5000;      // floating nav lingers this long after scrolling stops    // drift back to today after this long without input
 const DAY_MS = 86400000;
-const MODE_KEY = "umami-calendar-mode";
+const MODE_KEY = "tufa-calendar-mode";
 const rand = (a, b) => a + Math.random() * (b - a);
 
 const ICON_PREV = '<svg viewBox="0 0 16 16"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>';
@@ -474,7 +474,7 @@ class CalendarView extends ItemView {
   }
 }
 
-module.exports = class UmamiCalendar extends Plugin {
+module.exports = class TufaCalendar extends Plugin {
   async onload() {
     this.registerView(VIEW, (leaf) => new CalendarView(leaf));
     this.addCommand({ id: "open", name: "Open calendar", callback: () => this.activate() });

@@ -1,4 +1,4 @@
-/* Umami Calendar — continuous month scroll, or a year of dots.
+/* Tufa Calendar — continuous month scroll, or a year of dots.
    Fills its pane; square panes get day circles, tall panes get week bands. */
 
 .uc-host.view-content {
@@ -11,7 +11,7 @@
 .uc {
   --uc-accent: var(--interactive-accent, #ffadf6);
   --uc-ink: var(--text-normal);
-  --uc-head-ink: var(--umami-ink, var(--text-normal));
+  --uc-head-ink: var(--tufa-ink, var(--text-normal));
   --uc-soft: color-mix(in srgb, var(--text-normal) 78%, transparent);
   --uc-weekend: color-mix(in srgb, var(--text-normal) 58%, transparent);
   --uc-faint: color-mix(in srgb, var(--text-normal) 42%, transparent);

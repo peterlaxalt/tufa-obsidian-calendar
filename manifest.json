@@ -1,9 +1,9 @@
 {
-  "id": "umami-calendar",
-  "name": "Umami Calendar",
+  "id": "tufa-calendar",
+  "name": "Tufa Calendar",
   "version": "1.0.0",
   "minAppVersion": "1.4.0",
-  "description": "A quiet calendar: a scrolling month view or a year of dots.",
+  "description": "A dead simple calendar: a scrolling month view or a year of dots.",
   "author": "Peter Laxalt",
   "isDesktopOnly": false
 }
