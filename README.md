@@ -2,10 +2,9 @@
 
 A dead simple calendar for the Obsidian sidebar. It shows the date, and that's the only thing it does. It never creates or changes a note.
 
-<p>
-  <img src="screenshots/month.png" alt="Month view" width="320">
-  <img src="screenshots/year-of-dots.png" alt="Year of dots" width="320">
-</p>
+![Month view and year of dots](screenshots/preview.png)
+
+![The year of dots rippling in the sidebar](screenshots/demo.gif)
 
 ## What you see
 
