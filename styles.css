@@ -1,5 +1,47 @@
-/* Tufa Calendar — continuous month scroll, or a year of dots.
-   Fills its pane; square panes get day circles, tall panes get week bands. */
+/* Tufa Calendar: continuous month scroll, or a year of dots.
+   Fills its pane; square panes get day circles, tall panes get week bands.
+
+   Customize with these variables (each falls back to your theme when unset):
+     --tufa-accent  today, the current month and the play button   (default: --interactive-accent)
+     --tufa-ink     the month header and month labels              (default: --tufa-text)
+     --tufa-text    day numbers and dots; the faded tones mix from it (default: --text-normal)
+     --tufa-font    the month header font                          (default: --font-text)
+   With the Style Settings plugin they appear under Settings → Style Settings → Tufa Calendar.
+   Style Settings only writes a variable you have changed, so untouched ones keep the theme's value. */
+
+/* @settings
+
+name: Tufa Calendar
+id: tufa-calendar
+settings:
+  - id: tufa-accent
+    title: Accent
+    description: Today, the current month and the play button. Unset uses your theme's accent color.
+    type: variable-color
+    format: hex
+    default: '#8a5cf5'
+  - id: tufa-ink
+    title: Month names
+    description: The month header and the month labels. Unset uses the day number color.
+    type: variable-themed-color
+    format: hex
+    default-light: '#222222'
+    default-dark: '#dadada'
+  - id: tufa-text
+    title: Day numbers and dots
+    description: The faded tones (weekends, other months, past dots) are mixed from this color. Unset uses your theme's text color.
+    type: variable-themed-color
+    format: hex
+    default-light: '#222222'
+    default-dark: '#dadada'
+  - id: tufa-font
+    title: Month header font
+    description: A font name installed on your computer. Unset uses your text font.
+    type: variable-text
+    quotes: true
+    default: ''
+*/
+
 
 .uc-host.view-content {
   padding: 0 !important;
@@ -9,13 +51,13 @@
 }
 
 .uc {
-  --uc-accent: var(--interactive-accent, #ffadf6);
-  --uc-ink: var(--text-normal);
-  --uc-head-ink: var(--tufa-ink, var(--text-normal));
-  --uc-soft: color-mix(in srgb, var(--text-normal) 78%, transparent);
-  --uc-weekend: color-mix(in srgb, var(--text-normal) 58%, transparent);
-  --uc-faint: color-mix(in srgb, var(--text-normal) 42%, transparent);
-  --uc-rule: color-mix(in srgb, var(--text-normal) 11%, transparent);
+  --uc-accent: var(--tufa-accent, var(--interactive-accent));
+  --uc-ink: var(--tufa-text, var(--text-normal));
+  --uc-head-ink: var(--tufa-ink, var(--uc-ink));
+  --uc-soft: color-mix(in srgb, var(--uc-ink) 78%, transparent);
+  --uc-weekend: color-mix(in srgb, var(--uc-ink) 58%, transparent);
+  --uc-faint: color-mix(in srgb, var(--uc-ink) 42%, transparent);
+  --uc-rule: color-mix(in srgb, var(--uc-ink) 11%, transparent);
   --uc-pad: clamp(12px, 6cqi, 24px);
   --uc-inset: 6px;
 
@@ -51,7 +93,7 @@
 }
 
 .uc-month {
-  font-family: "SL-Tastebud-Serif", var(--font-text);
+  font-family: var(--tufa-font, var(--font-text));
   font-size: clamp(17px, 6cqi, 22px);
   color: var(--uc-head-ink);
   letter-spacing: -0.005em;
@@ -177,7 +219,7 @@
   color: var(--uc-faint);
 }
 
-.uc-dow.is-weekend { color: color-mix(in srgb, var(--text-normal) 32%, transparent); }
+.uc-dow.is-weekend { color: color-mix(in srgb, var(--uc-ink) 32%, transparent); }
 .uc-dow.is-release { color: var(--uc-soft); }
 
 /* ---------- month scroller ---------- */
@@ -252,7 +294,7 @@
 
 .uc-day.is-weekend .uc-num { color: var(--uc-weekend); }
 .uc-day.is-release .uc-num { color: var(--uc-ink); }
-.uc-day.is-out .uc-num { color: color-mix(in srgb, var(--text-normal) 22%, transparent); }
+.uc-day.is-out .uc-num { color: color-mix(in srgb, var(--uc-ink) 22%, transparent); }
 
 /* release days (Thursday): a small accent dot beneath */
 .uc-day.is-release .uc-num::after {
@@ -297,7 +339,7 @@
     border-top: 1px solid var(--uc-rule);
   }
 
-  .uc-day.is-out { border-top-color: color-mix(in srgb, var(--text-normal) 5%, transparent); }
+  .uc-day.is-out { border-top-color: color-mix(in srgb, var(--uc-ink) 5%, transparent); }
 
   .uc-num {
     width: auto;
@@ -354,7 +396,7 @@
   cursor: pointer;
 }
 
-.uc-dot { --dot-base: color-mix(in srgb, var(--text-normal) 20%, transparent); }
+.uc-dot { --dot-base: color-mix(in srgb, var(--uc-ink) 20%, transparent); }
 .uc-dot.is-past { --dot-base: var(--uc-ink); }
 .uc-dot.is-today { --dot-base: var(--uc-accent); }
 
